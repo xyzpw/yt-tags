@@ -1,33 +1,19 @@
 #!/usr/bin/env python3
 
 import requests
-import ast
+import re
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", help="ID of youtube video")
-args = parser.parse_args()
-args = vars(args)
+parser.add_argument("-i", help="youtube video ID")
+args = vars(parser.parse_args())
+
+tagsPattern = re.compile("\"keywords\":(?P<tags>([^\]]*.))")
 
 try:
-    ytId = input("ID: ") if args.get('i') == None else args.get('i')
-except (KeyboardInterrupt, EOFError):
-    print()
-    exit()
-except Exception as ERROR:
-    exit(ERROR)
-
-resp = requests.get(f"https://www.youtube.com/watch?v={ytId}")
-
-if (resp.text.find('"keywords":') < 0):
-    print("No tags found")
-    exit()
-t1 = resp.text.find('"keywords":') + len('"keywords":')
-t2 = resp.text[t1:].find('"],') + 2
-
-keywords = resp.text[t1:t1+t2]
-keywords = ast.literal_eval(keywords)
-del(t1,t2)
-print(keywords)
-
-
+    videoId = args.get('i')
+    txt = requests.get("https://www.youtube.com/watch?v={}".format(videoId)).text
+    tags = re.search(tagsPattern, txt).group("tags")
+    print(tags)
+except:
+    exit("No tags found")
